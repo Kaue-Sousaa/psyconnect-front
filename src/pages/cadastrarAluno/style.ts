@@ -1,0 +1,114 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: "#f0f8ff",
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+        width: "90%",
+        padding: 20,
+        backgroundColor: "white",
+        borderRadius: 10,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    input: {
+        width: "100%",
+        padding: 10,
+        borderWidth: 1,
+        borderColor: "#b0c4de",
+        borderRadius: 5,
+        marginVertical: 5,
+        backgroundColor: "#ffffff",
+    },
+    pickerContainer: {
+        width: "100%",
+        marginVertical: 5,
+    },
+    pickerLabel: {
+        fontSize: 16,
+        color: "#4682B4",
+        marginBottom: 5,
+    },
+    picker: {
+        width: "100%",
+        borderWidth: 1,
+        borderColor: "#b0c4de",
+        borderRadius: 5,
+        backgroundColor: "#f5f5f5",
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+    },
+    saveButton: {
+        backgroundColor: "#6A5ACD",
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+        marginTop: 10,
+        flex: 1,
+        marginRight: 5,
+    },
+    cancelButton: {
+        backgroundColor: "#f08080",
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+        marginTop: 10,
+        flex: 1,
+        marginLeft: 5,
+    },
+    buttonText: {
+        color: "white",
+        fontWeight: "bold",
+    },
+    alunosContainer: {
+        marginTop: 20,
+        flex: 1,
+        paddingHorizontal: 10,
+    },
+    alunosTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "black",
+    },
+    diaContainer: {
+        marginBottom: 10,
+        padding: 10,
+        backgroundColor: "#e6e6fa",
+        borderRadius: 5,
+    },
+    diaText: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#4B0082",
+    },
+    alunoItem: {
+        padding: 10,
+        borderWidth: 1,
+        borderColor: "#dcdcdc",
+        borderRadius: 5,
+        marginVertical: 5,
+        backgroundColor: "#fafafa",
+    },
+    alunoNome: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#333",
+    },
+});
+

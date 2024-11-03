@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Text, View, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator, ImageBackground } from 'react-native';
 import { style } from './styles';
 import logo from '../../assets/logo.png';
-import autismo from '../../assets/simbolo-autismo.png';  // Importa a imagem
+import autismo from '../../assets/simbolo-autismo.png'; 
 import { MaterialIcons } from '@expo/vector-icons';
 import { themas } from "../../global/themes";
 
@@ -32,11 +32,7 @@ export default function Login() {
     }
 
     return (
-        // <ImageBackground
-        //     source={autismo}
-        //     style={{ flex: 1}} 
-        //     resizeMode="cover" 
-        // >
+        
             <View style={style.container}>
                 <View style={style.boxTop}>
                     <Image
@@ -86,6 +82,5 @@ export default function Login() {
                     </TouchableOpacity>
                 </View>
             </View>
-        // </ImageBackground>
     );
 }
