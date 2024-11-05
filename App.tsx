@@ -8,7 +8,15 @@ import Home from './src/pages/home';
 import Cadastro from './src/pages/cadastroUsuario';
 import CadastroAluno from './src/pages/cadastrarAluno';
 
-const Stack = createStackNavigator();
+type RootStackParamList = {
+  Login: undefined;
+  PrimeiroAcesso: undefined;
+  Home: undefined;
+  Cadastro: undefined;
+  CadastroAluno: undefined;
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (

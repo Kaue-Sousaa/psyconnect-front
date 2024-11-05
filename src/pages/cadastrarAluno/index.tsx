@@ -113,6 +113,7 @@ export default function CadastroAluno() {
     return (
         <View style={styles.container}>
             <Calendar
+                
                 onDayPress={handleDayPress}
                 markedDates={alunosCadastrados.reduce<Record<string, { marked: boolean; dotColor: string }>>((acc, aluno) => {
                     if (aluno.data) {

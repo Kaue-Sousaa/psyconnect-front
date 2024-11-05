@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, TouchableOpacity } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome';
-
-import {styles} from "./style"
+import { View, Text} from "react-native";
+import { Input } from "../../components/Input";
+import { styles } from "./style";
+import { Button } from "../../components/Button";
+import { MaterialIcons, Octicons } from '@expo/vector-icons';
 
 export default function PrimeiroAcesso() {
     const [email, setEmail] = useState("");
@@ -10,49 +11,48 @@ export default function PrimeiroAcesso() {
     const [confirmSenha, setConfirmSenha] = useState("");
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mostrarConfirmSenha, setMostrarConfirmSenha] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleEnviar = () => {
         console.log("Email:", email);
         console.log("Nova Senha:", novaSenha);
         console.log("Confirmação de Senha:", confirmSenha);
+        setLoading(false);
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Primeiro Acesso</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-            />
-            <View style={styles.passwordContainer}>
-                <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Nova Senha"
+            <View style={styles.boxMid}>
+                <Input
+                    title="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    IconRigth={MaterialIcons}
+                    keyboardType="email-address"
+                />
+                <Input
+                    title="Nova Senha"
                     value={novaSenha}
                     onChangeText={setNovaSenha}
                     secureTextEntry={!mostrarSenha}
+                    IconRigth={Octicons}
+                    iconRightName={!mostrarSenha ? "eye-closed" : "eye"}
+                    onIconRigthPress={() => setMostrarSenha(!mostrarSenha)}
                 />
-                <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)} style={styles.iconContainer}>
-                    <Icon name={mostrarSenha ? "eye" : "eye-slash"} size={20} color="#333" />
-                </TouchableOpacity>
-            </View>
-            <View style={styles.passwordContainer}>
-                <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Confirme a Senha"
+                <Input
+                    title="Confirme a Senha"
                     value={confirmSenha}
                     onChangeText={setConfirmSenha}
                     secureTextEntry={!mostrarConfirmSenha}
+                    IconRigth={Octicons}
+                    iconRightName={!mostrarConfirmSenha ? "eye-closed" : "eye"}
+                    onIconRigthPress={() => setMostrarConfirmSenha(!mostrarConfirmSenha)}
                 />
-                <TouchableOpacity onPress={() => setMostrarConfirmSenha(!mostrarConfirmSenha)} style={styles.iconContainer}>
-                    <Icon name={mostrarConfirmSenha ? "eye" : "eye-slash"} size={20} color="#333" />
-                </TouchableOpacity>
             </View>
-            <Button title="Enviar" onPress={handleEnviar} />
+           <View style={styles.boxBottom}>
+                <Button text="ENVIAR" loading={loading} onPress={() => handleEnviar()} />
+            </View>
         </View>
     );
 }
-
