@@ -5,32 +5,63 @@ import { Button } from "../../components/Button";
 import { Text, View, Alert } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
+import Constants from "expo-constants";
+
+const baseURL = Constants.expoConfig?.extra?.API_URL;
 
 export default function Login() {
     const navigation = useNavigation<NavigationProp<any>>();
+
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [senha, setSenha] = useState('');
     const [showPassword, setShowPassword] = useState(true);
     const [loading, setLoading] = useState(false);
+
+    const validarEmail = (email: string) => {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    };
 
     async function getLogin() {
         try {
             setLoading(true);
 
-            if (!email || !password) {
-                return Alert.alert('Atenção:', 'Informe os campos obrigatórios!');
+            if (!email) {
+                return Alert.alert("Erro", "O campo de email não pode estar vazio.");
             }
-            
-            if (email === 'test@example.com' && password === '123456') {
+            if (!validarEmail(email)) {
+                return Alert.alert("Erro", "Por favor, insira um email válido.");
+            }
+            if (!senha) {
+                return Alert.alert("Erro", "O campo de senha não pode estar vazio.");
+            }
+
+            const response = await fetch(`${baseURL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, senha }),
+            });
+
+            if (response.ok) {
                 navigation.reset({
                     index: 0,
                     routes: [{ name: 'Home' }],
                 });
+            }else if (response.status === 403) {
+                const errorData = await response.json();
+                if (errorData.message === "É necessário alterar a senha no primeiro acesso.") {
+                    navigation.navigate('Primeiro Acesso', { email });
+                } else {
+                    Alert.alert('Erro', errorData.message || 'Erro ao fazer login');
+                }
             } else {
-                Alert.alert('Erro', 'Email ou senha incorretos');
+                Alert.alert('Erro ao fazer login');
             }
         } catch (error) {
             console.log(error);
+            Alert.alert('Erro', 'Não foi possível conectar ao servidor');
         } finally {
             setLoading(false);
         }
@@ -48,12 +79,11 @@ export default function Login() {
                     onChangeText={setEmail}
                     IconRigth={MaterialIcons}
                     iconRightName="email"
-                    onIconRigthPress={() => console.log('Ola')}
                 />
                 <Input 
                     title="SENHA"
-                    value={password}
-                    onChangeText={setPassword}
+                    value={senha}
+                    onChangeText={setSenha}
                     IconRigth={Octicons}
                     iconRightName={showPassword ? "eye-closed" : "eye"}
                     onIconRigthPress={() => setShowPassword(!showPassword)}
@@ -61,7 +91,7 @@ export default function Login() {
                 />
             </View>
             <View style={style.boxBottom}>
-                <Button text="ENTRAR" loading={loading} onPress={() => getLogin()} />
+                <Button text="ENTRAR" loading={loading} onPress={getLogin} />
             </View>
         </View>
     );

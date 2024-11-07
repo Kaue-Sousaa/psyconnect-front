@@ -22,6 +22,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "API_URL": "http://192.168.0.8:8096"
     }
   }
 }

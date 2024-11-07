@@ -6,28 +6,32 @@ import Login from './src/pages/login';
 import PrimeiroAcesso from './src/pages/primeiroAcesso';
 import Home from './src/pages/home';
 import Cadastro from './src/pages/cadastroUsuario';
-import CadastroAluno from './src/pages/cadastrarAluno';
+import Agendamento from './src/pages/cadastrarAluno';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+
 
 type RootStackParamList = {
   Login: undefined;
-  PrimeiroAcesso: undefined;
+  "Primeiro Acesso": undefined;
   Home: undefined;
   Cadastro: undefined;
-  CadastroAluno: undefined;
+  Agendamento: undefined;
 };
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Drawer = createDrawerNavigator();
+
+// const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="PrimeiroAcesso" component={PrimeiroAcesso} />
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="Cadastro" component={Cadastro} />
-        <Stack.Screen name="CadastroAluno" component={CadastroAluno} />
-      </Stack.Navigator>
+      <Drawer.Navigator initialRouteName="Login">
+        <Drawer.Screen name="Login" component={Login} />
+        <Drawer.Screen name="Primeiro Acesso" component={PrimeiroAcesso} />
+        <Drawer.Screen name="Home" component={Home} />
+        <Drawer.Screen name="Cadastro" component={Cadastro} />
+        <Drawer.Screen name="Agendamento" component={Agendamento} />
+      </Drawer.Navigator>
     </NavigationContainer>
   );
 }
