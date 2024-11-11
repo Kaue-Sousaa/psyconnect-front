@@ -5,12 +5,15 @@ import { Button } from "../../components/Button";
 import { Text, View, Alert } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from "expo-constants";
+import { useAuth } from '../../utils/AuthContext';
 
 const baseURL = Constants.expoConfig?.extra?.API_URL;
 
 export default function Login() {
     const navigation = useNavigation<NavigationProp<any>>();
+    const { setRole } = useAuth();
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
@@ -25,7 +28,7 @@ export default function Login() {
     async function getLogin() {
         try {
             setLoading(true);
-
+    
             if (!email) {
                 return Alert.alert("Erro", "O campo de email não pode estar vazio.");
             }
@@ -35,7 +38,7 @@ export default function Login() {
             if (!senha) {
                 return Alert.alert("Erro", "O campo de senha não pode estar vazio.");
             }
-
+    
             const response = await fetch(`${baseURL}/auth/login`, {
                 method: 'POST',
                 headers: {
@@ -43,21 +46,31 @@ export default function Login() {
                 },
                 body: JSON.stringify({ email, senha }),
             });
-
+    
             if (response.ok) {
+                const data = await response.json();
+                await AsyncStorage.setItem('accessToken', data.accessToken);
+                await AsyncStorage.setItem('usuario', data.usuario);
+                await AsyncStorage.setItem('email', data.email);
+                await AsyncStorage.setItem('role', data.role);
+
+                setRole(data.role);
+
                 navigation.reset({
                     index: 0,
-                    routes: [{ name: 'Home' }],
+                    routes: [{ name: 'Main' }],
                 });
-            }else if (response.status === 403) {
+            } else if (response.status === 403) {
                 const errorData = await response.json();
                 if (errorData.message === "É necessário alterar a senha no primeiro acesso.") {
                     navigation.navigate('Primeiro Acesso', { email });
+                    setSenha('');
                 } else {
                     Alert.alert('Erro', errorData.message || 'Erro ao fazer login');
                 }
             } else {
-                Alert.alert('Erro ao fazer login');
+                const errorData = await response.json();
+                Alert.alert('Erro ao fazer login', errorData.message);
             }
         } catch (error) {
             console.log(error);
@@ -85,7 +98,7 @@ export default function Login() {
                     value={senha}
                     onChangeText={setSenha}
                     IconRigth={Octicons}
-                    iconRightName={showPassword ? "eye-closed" : "eye"}
+                    iconRightName={showPassword ? "eye" : "eye-closed"}
                     onIconRigthPress={() => setShowPassword(!showPassword)}
                     secureTextEntry={showPassword}
                 />

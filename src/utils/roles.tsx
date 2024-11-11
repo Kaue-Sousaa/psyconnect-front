@@ -1,9 +1,9 @@
-type Role = "ADMIN" | "PROFESSOR" | "USER";
+type Role = "ADMIN" | "PROFESSOR" | "USUARIO";
 
 const roles: Record<string, Role[]> = {
   admin: ["ADMIN"],
   professor: ["PROFESSOR"],
-  user: ["USER"],
+  user: ["USUARIO"],
 };
 
 interface RolePath {
@@ -14,10 +14,6 @@ interface RolePath {
 const rolesPath: RolePath[] = [
   {
     path: "v1/aluno/cadastro",
-    role: [...roles.admin, ...roles.professor],
-  },
-  {
-    path: "v1/usuario/cadastro",
     role: [...roles.admin, ...roles.professor],
   },
   {

@@ -58,11 +58,7 @@ export default function PrimeiroAcesso() {
             });
             if(response.ok){
                 Alert.alert("Senha atualizada");
-
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Home' }],
-                });
+                navigation.navigate('Login', { email });
             }else{
                 let errorMessage = 'Erro desconhecido';
                 try {
@@ -99,7 +95,7 @@ export default function PrimeiroAcesso() {
                     onChangeText={setNovaSenha}
                     secureTextEntry={!mostrarSenha}
                     IconRigth={Octicons}
-                    iconRightName={!mostrarSenha ? "eye-closed" : "eye"}
+                    iconRightName={mostrarSenha ? "eye" : "eye-closed"}
                     onIconRigthPress={() => setMostrarSenha(!mostrarSenha)}
                 />
                 <Input
@@ -108,7 +104,7 @@ export default function PrimeiroAcesso() {
                     onChangeText={setConfirmSenha}
                     secureTextEntry={!mostrarConfirmSenha}
                     IconRigth={Octicons}
-                    iconRightName={!mostrarConfirmSenha ? "eye-closed" : "eye"}
+                    iconRightName={mostrarConfirmSenha ? "eye" : "eye-closed"}
                     onIconRigthPress={() => setMostrarConfirmSenha(!mostrarConfirmSenha)}
                 />
             </View>

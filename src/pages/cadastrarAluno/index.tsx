@@ -1,77 +1,238 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Modal, TouchableOpacity, FlatList, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Picker } from "@react-native-picker/picker";
+import Constants from "expo-constants";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {styles} from './style'
+import { styles } from './style';
+import { Swipeable } from "react-native-gesture-handler";
+
+const baseURL = Constants.expoConfig?.extra?.API_URL;
 
 interface Aluno {
+    id: string | null;
     nome: string;
     dataNascimento: string;
+    dataAgendamento: string;
     habilidade: string;
     dificuldade: string;
     responsavel: string;
     data: string | null;
 }
 
+interface UsuarioDto {
+    nome: string;
+}
+
 export default function CadastroAluno() {
+    const [token, setToken] = useState<string | null>(null);
+    const [role, setRole] = useState<string | null>(null);
+    const [userLogado, setUserLogado] = useState<string | null>(null);
+
+    const [id, setId] = useState("");
     const [nome, setNome] = useState("");
     const [dataNascimento, setDataNascimento] = useState("");
+    const [dataAgendamento, setDataAgendamento] = useState("");
     const [habilidade, setHabilidade] = useState("");
     const [dificuldade, setDificuldade] = useState("");
-    const [responsavel, setResponsavel] = useState("");
+    const [responsavel, setResponsavel] = useState<UsuarioDto | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [alunosCadastrados, setAlunosCadastrados] = useState<Aluno[]>([]);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [responsaveis, setResponsaveis] = useState<UsuarioDto[]>([]);
 
-    const handleDayPress = (day: { dateString: string }) => {
-        setSelectedDate(day.dateString);
-        setModalVisible(true);
+    useEffect(() => {
+        const loadTokenAndRole = async () => {
+            const storedToken = await AsyncStorage.getItem('accessToken');
+            const storedRole = await AsyncStorage.getItem('role');
+            const storedUser = await AsyncStorage.getItem('usuario');
+            
+            setToken(storedToken);
+            setRole(storedRole);
+            setUserLogado(storedUser);
+        };
+        loadTokenAndRole();
+    }, []);
+
+    useEffect(() => {
+        if (selectedDate) {
+            setDataAgendamento(selectedDate);
+        }
+    }, [selectedDate]);
+
+    useEffect(() => {
+        if (token && role && userLogado) {
+            fetchAlunos();
+            fetchResponsaveis();
+        }
+    }, [token, role, userLogado]);
+
+    const fetchResponsaveis = async () => {
+        try {
+            const response = await fetch(`${baseURL}/v1/usuario/role-usuario`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            if (response.status === 200) {
+                const responsaveisData: UsuarioDto[] = await response.json();
+                setResponsaveis(responsaveisData);
+            } else {
+                Alert.alert("Erro", "Não foi possível carregar os responsáveis.");
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            Alert.alert("Erro", "Falha ao buscar responsáveis.");
+        }
     };
 
-    const handleSave = () => {
+    const fetchAlunos = async () => {
+        try {
+            if (!role || !userLogado) return;
+
+            const url =
+                role === 'USUARIO'
+                    ? `${baseURL}/v1/aluno/responsavel/${userLogado}`
+                    : `${baseURL}/v1/aluno/all`; 
+    
+            const response = await fetch(url, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+    
+            if (response.status === 200) {
+                const alunosData: Aluno[] = await response.json();
+                const alunosOrganizados = alunosData.map(aluno => ({
+                    ...aluno,
+                    data: aluno.dataAgendamento,
+                }));
+                setAlunosCadastrados(alunosOrganizados);
+            } else {
+                Alert.alert("Erro", "Não foi possível carregar a lista de alunos.");
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            Alert.alert("Erro", "Falha ao buscar alunos.");
+        }
+    };
+
+    const handleDayPress = (day: { dateString: string }) => {
+        if (role !== 'USUARIO') {
+            setSelectedDate(day.dateString);
+            setModalVisible(true);
+        }
+    };
+
+    const handleSave = async () => {
+        const alunoId = editingIndex === null ? null : id;
+    
         const novoAluno: Aluno = { 
+            id: alunoId, 
             nome, 
             dataNascimento, 
+            dataAgendamento,
             habilidade, 
             dificuldade, 
-            responsavel, 
+            responsavel: responsavel?.nome || "",
             data: selectedDate 
         };
         
-        if (editingIndex !== null) {
-            const updatedAlunos = [...alunosCadastrados];
-            updatedAlunos[editingIndex] = novoAluno;
-            setAlunosCadastrados(updatedAlunos);
-        } else {
-            setAlunosCadastrados(prevAlunos => [...prevAlunos, novoAluno]);
+        try {
+            const url = editingIndex === null 
+                ? `${baseURL}/v1/aluno/cadastro` 
+                : `${baseURL}/v1/aluno`;
+    
+            const method = editingIndex === null ? "POST" : "PUT";
+    
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify(novoAluno),
+            });
+    
+            if (response.ok || response.status === 201) {
+                Alert.alert("Sucesso", editingIndex === null ? "Cadastro realizado!" : "Atualização realizada!");
+    
+                if (editingIndex === null) {
+                    setAlunosCadastrados(prevAlunos => [...prevAlunos, novoAluno]);
+                } else {
+                    const updatedAlunos = [...alunosCadastrados];
+                    updatedAlunos[editingIndex] = novoAluno;
+                    setAlunosCadastrados(updatedAlunos);
+                }
+    
+                resetForm();
+                setModalVisible(false);
+            } else {
+                const errorData = await response.json();
+                Alert.alert("Erro", errorData.message || "Falha ao salvar os dados.");
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            Alert.alert("Erro", "Não foi possível salvar os dados. Tente novamente.");
         }
-        
-        resetForm();
-        setModalVisible(false);
     };
-
+    
     const resetForm = () => {
         setNome("");
         setDataNascimento("");
         setHabilidade("");
         setDificuldade("");
-        setResponsavel("");
+        setResponsavel(null);
         setEditingIndex(null);
     };
 
-    const handleEdit = (index: number) => {
-        const aluno = alunosCadastrados[index];
-        setNome(aluno.nome);
-        setDataNascimento(aluno.dataNascimento);
-        setHabilidade(aluno.habilidade);
-        setDificuldade(aluno.dificuldade);
-        setResponsavel(aluno.responsavel);
-        setEditingIndex(index);
-        setSelectedDate(aluno.data);
-        setModalVisible(true);
+    const handleEdit = (id: string | null) => {
+        const aluno = alunosCadastrados.find(aluno => aluno.id === id);
+        if (aluno) {
+            setId(aluno.id!);
+            setNome(aluno.nome);
+            setDataNascimento(aluno.dataNascimento);
+            setHabilidade(aluno.habilidade);
+            setDificuldade(aluno.dificuldade);
+            setResponsavel(responsaveis.find(r => r.nome === aluno.responsavel) || null);
+            setEditingIndex(alunosCadastrados.findIndex(a => a.id === id));
+            setSelectedDate(aluno.data);
+            setModalVisible(true);
+        }
     };
+
+    const handleDelete = async (id: string | null) => {
+        try {
+            const response = await fetch(`${baseURL}/v1/aluno/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            if (response.ok || response.status === 204) {
+                setAlunosCadastrados(prevAlunos => prevAlunos.filter(aluno => aluno.id !== id));
+                Alert.alert("Sucesso", "Aluno excluído com sucesso.");
+            } else {
+                Alert.alert("Erro", "Não foi possível excluir o aluno.");
+            }
+        } catch (error) {
+            console.error("Erro ao excluir aluno:", error);
+            Alert.alert("Erro", "Falha ao excluir aluno.");
+        }
+    };
+
+    const renderRightActions = (id: string | null) => (
+        <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => handleDelete(id)}
+        >
+            <Text style={styles.buttonText}>Excluir</Text>
+        </TouchableOpacity>
+    );
+
+
 
     const handleCancel = () => {
         resetForm();
@@ -91,8 +252,8 @@ export default function CadastroAluno() {
         const [year, month, day] = dateString.split("-");
         return `${day}/${month}/${year}`;
     };
-    
-    const alunosPorDia = () => {
+
+    const alunosPorDia = (alunosFiltrados?: Aluno[]) => {
         const diasAlunos: Record<string, Aluno[]> = {};
 
         alunosCadastrados.forEach(aluno => {
@@ -110,19 +271,23 @@ export default function CadastroAluno() {
         }));
     };
 
+    const alunosFiltrados = role === 'USUARIO'
+    ? alunosCadastrados.filter(aluno => aluno.responsavel === userLogado)
+    : alunosCadastrados;
+
     return (
         <View style={styles.container}>
             <Calendar
-                
+                locale={'pt-BR'}
                 onDayPress={handleDayPress}
                 markedDates={alunosCadastrados.reduce<Record<string, { marked: boolean; dotColor: string }>>((acc, aluno) => {
                     if (aluno.data) {
-                        acc[aluno.data] = { marked: true, dotColor: 'blue' }; 
-                    }
+                        acc[aluno.data] = { marked: true, dotColor: 'blue' };
+                    }       
                     return acc;
                 }, {})}
             />
-    
+
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -132,12 +297,13 @@ export default function CadastroAluno() {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text>{editingIndex !== null ? "Editar Aluno" : "Cadastro do Aluno"} para {formatDateTitle(selectedDate)}</Text>
-    
+
                         <TextInput
                             placeholder="Nome"
                             value={nome}
                             onChangeText={setNome}
                             style={styles.input}
+                            editable={role !== 'USUARIO'}
                         />
                         <TextInput
                             placeholder="Data de Nascimento (DD/MM/AAAA)"
@@ -146,36 +312,39 @@ export default function CadastroAluno() {
                             keyboardType="numeric"
                             maxLength={10}
                             style={styles.input}
+                            editable={role !== 'USUARIO'}
                         />
                         <TextInput
                             placeholder="Habilidade"
                             value={habilidade}
                             onChangeText={setHabilidade}
                             style={styles.input}
+                            editable={role !== 'USUARIO'}
                         />
                         <TextInput
                             placeholder="Dificuldade"
                             value={dificuldade}
                             onChangeText={setDificuldade}
                             style={styles.input}
+                            editable={role !== 'USUARIO'}
                         />
-    
+
                         <View style={styles.pickerContainer}>
                             <Text style={styles.pickerLabel}>Responsável:</Text>
                             <Picker
-                                selectedValue={responsavel}
-                                onValueChange={setResponsavel}
-                                style={styles.picker}
+                                enabled = {role !== 'USUARIO'}
+                                selectedValue={responsavel?.nome}
+                                onValueChange={(value) => setResponsavel(responsaveis.find(r => r.nome === value) || null)}
                             >
-                                <Picker.Item label="Selecione um responsável" value="" />
-                                <Picker.Item label="Responsável 1" value="Responsável 1" />
-                                <Picker.Item label="Responsável 2" value="Responsável 2" />
-                                <Picker.Item label="Responsável 3" value="Responsável 3" />
+                                <Picker.Item label="Selecione o Responsável" value="" />
+                                {responsaveis.map((responsavelItem) => (
+                                    <Picker.Item key={responsavelItem.nome} label={responsavelItem.nome} value={responsavelItem.nome} />
+                                ))}
                             </Picker>
                         </View>
 
                         <View style={styles.buttonContainer}>
-                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                            <TouchableOpacity disabled={role === 'USUARIO'} style={styles.saveButton} onPress={handleSave}>
                                 <Text style={styles.buttonText}>Salvar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
@@ -185,24 +354,31 @@ export default function CadastroAluno() {
                     </View>
                 </View>
             </Modal>
-
             <FlatList
-                data={alunosPorDia()}
-                keyExtractor={(item) => item.data}
+                data={alunosPorDia(alunosFiltrados)}
+                keyExtractor={(item, index) => `${item.data}-${index}`}
                 ListHeaderComponent={<Text style={styles.alunosTitle}>Agendamentos do mês:</Text>}
                 renderItem={({ item }) => (
                     <View style={styles.diaContainer}>
                         <Text style={styles.diaText}>{formatDateTitle(item.data)}</Text>
-                        {item.alunos.map((aluno, index) => (
-                            <TouchableOpacity key={index} onPress={() => handleEdit(alunosCadastrados.findIndex(a => a === aluno))} style={styles.alunoItem}>
-                                <Text style={styles.alunoNome}>{aluno.nome}</Text>
-                                <Text>Data Nascimento: {aluno.dataNascimento}</Text>
-                                <Text>Responsável: {aluno.responsavel}</Text>
-                            </TouchableOpacity>
+                        {item.alunos.map((aluno) => (
+                            <Swipeable
+                                enabled={role !== 'USUARIO'}
+                                key={aluno.id}
+                                renderRightActions={() => renderRightActions(aluno.id)}
+                            >
+                                <TouchableOpacity
+                                    style={styles.alunoItem}
+                                    onPress={() => handleEdit(aluno.id)}
+                                >
+                                    <Text style={styles.alunoNome}>{aluno.nome}</Text>
+                                    <Text>Data Nascimento: {aluno.dataNascimento}</Text>
+                                    <Text>Responsável: {aluno.responsavel}</Text>
+                                </TouchableOpacity>
+                            </Swipeable>
                         ))}
                     </View>
                 )}
-                style={styles.alunosContainer}
             />
         </View>
     );

@@ -1,7 +1,7 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 
 export type RootStackParamList = {
-  Login: undefined;
+  Login: { email: string };
   PrimeiroAcesso: { email: string };
   Home: undefined;
   Cadastro: undefined;

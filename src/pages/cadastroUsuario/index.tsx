@@ -1,9 +1,15 @@
 import React, { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
 
 import {styles} from "./style"
+import Constants from "expo-constants";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+
+const baseURL = Constants.expoConfig?.extra?.API_URL;
 
 export default function CadastroUsuario() {
+    const navigation = useNavigation<NavigationProp<any>>();
+    
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
     const [cpf, setCpf] = useState("");
@@ -11,17 +17,50 @@ export default function CadastroUsuario() {
     const [telefone, setTelefone] = useState("");
     const [role, setRole] = useState("USUARIO");
     const [isProfessor, setIsProfessor] = useState(false);
-
-    const handleSubmit = () => {
-        console.log({
-            nome,
-            email,
-            cpf,
-            dataNascimento,
-            telefone,
-            role,
-            isProfessor
-        });
+    
+    const handleSubmit = async () => {
+        try {
+            const response = await fetch(`${baseURL}/v1/usuario/cadastro`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    nome,
+                    email,
+                    cpf: cpf.replace(/[.-]/g, ""),
+                    dataNascimento,
+                    telefone,
+                    role,
+                    isProfessor,
+                }),
+            });
+    
+            if (response.status == 200) {
+                Alert.alert("Sucesso", "Usuário cadastrado!");
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Main' }],
+                });
+                resetForm();
+            } else {
+                const errorData = await response.json();
+                Alert.alert("Erro", errorData.message || "Falha ao cadastrar usuário.");
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            Alert.alert("Erro", "Não foi possível cadastrar o usuário. Tente novamente.");
+        }
+    };
+    
+    const resetForm = () => {
+        setNome("");
+        setEmail("");
+        setCpf("");
+        setDataNascimento("");
+        setTelefone("");
+        setRole("USUARIO");
+        setIsProfessor(false);
     };
 
     const formatarCpf = (input: string) => {
