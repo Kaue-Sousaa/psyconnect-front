@@ -25,10 +25,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "API_URL": "https://psyconnect-back-b1c24e2d1483.herokuapp.com",
-      "eas": {
-        "projectId": "0a414b5c-0c94-42f8-8b6b-dcbc84010224"
-      }
+      "API_URL": "http://192.168.0.13:8096"
     }
   }
 }

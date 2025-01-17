@@ -87,7 +87,7 @@ function HomeDrawer() {
         onPress={handleLogout}
         style={{
           position: 'absolute',
-          top: 28,
+          top: 5,
           right: 20,
           zIndex: 1,
           backgroundColor: 'transparent',
